@@ -1,9 +1,9 @@
-require("dotenv").config();
+const md5=require("md5")
 const express=require("express");
 const bodyParser=require("body-parser");
 const ejs=require("ejs");
 const mongoose=require("mongoose")
-const encrypt=require("mongoose-encryption")
+// const encrypt=require("mongoose-encryption")
 const app= express();
 app.set("view engine","ejs");
 app.use(express.static("public"));
@@ -14,7 +14,7 @@ const secretSchema=new mongoose.Schema({
   password:String
 })
 
-secretSchema.plugin(encrypt, { secret: process.env.SECRET , encryptedFields: ['password'] })
+// secretSchema.plugin(encrypt, { secret: process.env.SECRET , encryptedFields: ['password'] })
 const Secret= mongoose.model("Secret",secretSchema)
 app.get("/",function(req,res){
   res.render("home");
@@ -28,11 +28,11 @@ app.post("/register",(req,res)=>{
   const password=req.body.password;
   const newSecret=new Secret({
     email:email,
-    password:password
+    password:md5(password)
   })
   newSecret.save((err)=>{
     if(!err)
-    res.render("secret")
+    res.render("secrets")
     else {
       redirect("/")
     };
@@ -49,7 +49,7 @@ app.post("/login",(req,res)=>{
     if(!err)
     {
       if(foundUser)
-      {if(foundUser.password===password)
+      {if(foundUser.password===md5(password))
       res.render("secrets");
       else
       res.redirect("/");
