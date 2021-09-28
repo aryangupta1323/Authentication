@@ -1,3 +1,4 @@
+const bcrypt=require("bcrypt");
 const md5=require("md5")
 const express=require("express");
 const bodyParser=require("body-parser");
@@ -24,21 +25,23 @@ app.get("/register",(req,res)=>{
 })
 app.post("/register",(req,res)=>{
 
-  const email=req.body.username;
-  const password=req.body.password;
-  const newSecret=new Secret({
-    email:email,
-    password:md5(password)
-  })
-  newSecret.save((err)=>{
-    if(!err)
-    res.render("secrets")
-    else {
-      redirect("/")
-    };
+  bcrypt.hash(req.body.password, 10 , function(err, hash) {
+    const email=req.body.username;
+    const password=req.body.password;
+    const newSecret=new Secret({
+      email:email,
+      password:hash
+    })
+    newSecret.save((err)=>{
+      if(!err)
+      res.render("secrets")
+      else {
+        redirect("/")
+      };
+    });
+});
   });
 
-})
 app.get("/login",(req,res)=>{
   res.render("login")
 })
@@ -49,14 +52,15 @@ app.post("/login",(req,res)=>{
     if(!err)
     {
       if(foundUser)
-      {if(foundUser.password===md5(password))
+      {bcrypt.compare(req.body.password, foundUser.password, function(err, result) {
+        if(!err)
       res.render("secrets");
+})}
       else
       res.redirect("/");
     }
-
-    }
-  })
+  }
+  )
 })
 app.listen(3000,()=>{
   console.log("port started at 3000");
